@@ -12,6 +12,7 @@ if [ ! -f /var/www/html/wp-config.php ]; then
       echo s/DB_NAME\', \'\'/DB_NAME\', \'${MYSQL_DATABASE}\'/;
     } | sed -f - /var/www/html/wp-config-sample.php > /var/www/html/wp-config.php;
     {
+      echo "define('FORCE_SSL_ADMIN', $([ "${HTTP_PROTO^^}" == "HTTPS" ] && echo "true" || echo "false"));";
       echo "define('WP_HOME','${HTTP_PROTO:-http}://${WORDPRESS_HOST:-localhost}');";
       echo "define('WP_SITEURL','${HTTP_PROTO:-http}://${WORDPRESS_HOST:-localhost}');";
     } >> /var/www/html/wp-config.php
@@ -22,6 +23,19 @@ else
     echo s/WP_HOME\',\'.*\'/WP_HOME\',\'${HTTP_PROTO:-http}://${WORDPRESS_HOST:-localhost}\'/g;
     echo s/WP_SITEURL\',\'.*\'/WP_SITEURL\',\'${HTTP_PROTO:-http}://${WORDPRESS_HOST:-localhost}\'/g;
   } | sed -f - -i /var/www/html/wp-config.php
+fi
+
+#if [ "${HTTP_PROTO//https/HTTPS}" == "HTTPS" ]; then
+if [ "${HTTP_PROTO^^}" == "HTTPS" ]; then
+  cat > /var/www/html/.htaccess <<'EOF'
+<IfModule mod_rewrite.c>
+ RewriteEngine On
+ RewriteCond %{HTTPS} off
+RewriteRule ^(.*)$ https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301]
+</IfModule>
+EOF
+else
+  rm -f /var/www/html/.htaccess 2>/dev/null
 fi
 
 if [ ! -z "${REDIS_HOST}" ]; then
