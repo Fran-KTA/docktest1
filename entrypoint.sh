@@ -12,7 +12,7 @@ if [ ! -f /var/www/html/wp-config.php ]; then
       echo s/DB_NAME\', \'\'/DB_NAME\', \'${MYSQL_DATABASE}\'/;
     } | sed -f - /var/www/html/wp-config-sample.php > /var/www/html/wp-config.php;
     {
-      echo "define('FORCE_SSL_ADMIN', $([ "${HTTP_PROTO^^}" == "HTTPS" ] && echo "true" || echo "false"));";
+      #echo "define('FORCE_SSL_ADMIN', $([ "${HTTP_PROTO^^}" == "HTTPS" ] && echo "true" || echo "false"));";
       echo "define('WP_HOME','${HTTP_PROTO:-http}://${WORDPRESS_HOST:-localhost}');";
       echo "define('WP_SITEURL','${HTTP_PROTO:-http}://${WORDPRESS_HOST:-localhost}');";
     } >> /var/www/html/wp-config.php
@@ -25,41 +25,41 @@ else
   } | sed -f - -i /var/www/html/wp-config.php
 fi
 
-{ cat <<EOF
-/* Attempt MySQL server connection. Assuming you are running MySQL
-server with default setting (user 'root' with no password) */
-\$link = mysqli_connect("${MYSQL_HOST}", "${MYSQL_USER}", "${MYSQL_PASSWORD}", "${MYSQL_DATABASE}");
-
-// Check connection
-if(\$link === false){
-    die("ERROR: Could not connect. " . mysqli_connect_error());
-}
-
-// Attempt update query execution
-\$sql = "UPDATE wp_options SET option_value='${HTTP_PROTO:-http}://${WORDPRESS_HOST:-localhost}' WHERE option_name in ('siteurl','home')";
-if(mysqli_query(\$link, \$sql)){
-    echo "Records were updated successfully.";
-} else {
-    echo "ERROR: Could not able to execute $sql. " . mysqli_error(\$link);
-}
-
-// Close connection
-mysqli_close(\$link);
-EOF
-} | php -a
+#{ cat <<EOF
+#/* Attempt MySQL server connection. Assuming you are running MySQL
+#server with default setting (user 'root' with no password) */
+#\$link = mysqli_connect("${MYSQL_HOST}", "${MYSQL_USER}", "${MYSQL_PASSWORD}", "${MYSQL_DATABASE}");
+#
+#// Check connection
+#if(\$link === false){
+#    die("ERROR: Could not connect. " . mysqli_connect_error());
+#}
+#
+#// Attempt update query execution
+#\$sql = "UPDATE wp_options SET option_value='${HTTP_PROTO:-http}://${WORDPRESS_HOST:-localhost}' WHERE option_name in ('siteurl','home')";
+#if(mysqli_query(\$link, \$sql)){
+#    echo "Records were updated successfully.";
+#} else {
+#    echo "ERROR: Could not able to execute $sql. " . mysqli_error(\$link);
+#}
+#
+#// Close connection
+#mysqli_close(\$link);
+#EOF
+#} | php -a
 
 #if [ "${HTTP_PROTO//https/HTTPS}" == "HTTPS" ]; then
-if [ "${HTTP_PROTO^^}" == "HTTPS" ]; then
-  cat > /var/www/html/.htaccess <<'EOF'
-<IfModule mod_rewrite.c>
- RewriteEngine On
- RewriteCond %{HTTPS} off
-RewriteRule ^(.*)$ https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301]
-</IfModule>
-EOF
-else
-  rm -f /var/www/html/.htaccess 2>/dev/null
-fi
+#if [ "${HTTP_PROTO^^}" == "HTTPS" ]; then
+#  cat > /var/www/html/.htaccess <<'EOF'
+#<IfModule mod_rewrite.c>
+# RewriteEngine On
+# RewriteCond %{HTTPS} off
+#RewriteRule ^(.*)$ https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301]
+#</IfModule>
+#EOF
+#else
+#  rm -f /var/www/html/.htaccess 2>/dev/null
+#fi
 
 if [ ! -z "${REDIS_HOST}" ]; then
   echo "NOTICE: Setting up Redis session handler..."
