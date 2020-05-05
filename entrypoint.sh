@@ -36,7 +36,7 @@ if(\$link === false){
 }
 
 // Attempt update query execution
-\$sql = "UPDATE wp_options SET option_value='${HTTP_PROTO:-http}://${WORDPRESS_HOST:-localhost}' WHERE option_name in ('siteurl','host')";
+\$sql = "UPDATE wp_options SET option_value='${HTTP_PROTO:-http}://${WORDPRESS_HOST:-localhost}' WHERE option_name in ('siteurl','home')";
 if(mysqli_query(\$link, \$sql)){
     echo "Records were updated successfully.";
 } else {
