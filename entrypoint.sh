@@ -25,6 +25,29 @@ else
   } | sed -f - -i /var/www/html/wp-config.php
 fi
 
+{ cat <<EOF
+/* Attempt MySQL server connection. Assuming you are running MySQL
+server with default setting (user 'root' with no password) */
+\$link = mysqli_connect("${MYSQL_HOST}", "${MYSQL_USER}", "${MYSQL_PASSWORD}", "${MYSQL_DATABASE}");
+
+// Check connection
+if(\$link === false){
+    die("ERROR: Could not connect. " . mysqli_connect_error());
+}
+
+// Attempt update query execution
+\$sql = "UPDATE wp_options SET option_value='${HTTP_PROTO:-http}://${WORDPRESS_HOST:-localhost}' WHERE option_name in ('siteurl','host')";
+if(mysqli_query(\$link, \$sql)){
+    echo "Records were updated successfully.";
+} else {
+    echo "ERROR: Could not able to execute $sql. " . mysqli_error(\$link);
+}
+
+// Close connection
+mysqli_close(\$link);
+EOF
+} | php -a
+
 #if [ "${HTTP_PROTO//https/HTTPS}" == "HTTPS" ]; then
 if [ "${HTTP_PROTO^^}" == "HTTPS" ]; then
   cat > /var/www/html/.htaccess <<'EOF'
