@@ -43,13 +43,18 @@ fi
 
 while ( \$link == false && \$counter<=3 ) {
   \$link = mysqli_connect("${MYSQL_HOST}", "${MYSQL_USER}", "${MYSQL_PASSWORD}", "${MYSQL_DATABASE}");
+  if(mysqli_connect_errno() == 1044){
+    print("ERROR: Database does not exist or user can't access.");
+    exit(1);
+  }
   sleep(10);
   \$counter++;
 }
 
 // Check connection
 if(\$link === false){
-    die("ERROR: Could not connect. " . mysqli_connect_error());
+    print("ERROR: Could not connect. " . mysqli_connect_error());
+    exit(1);
 }
 
 // Attempt update query execution
