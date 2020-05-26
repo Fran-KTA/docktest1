@@ -1,0 +1,54 @@
+version: "3.8"
+services:
+  mysql:
+    image: 'mysql:5.7'
+    #user: "${UID}:${GID}"
+    user: "1000:999"
+    environment:
+      - MYSQL_ROOT_PASSWORD=rootpass
+      - MYSQL_USER=wpdbuser
+      - MYSQL_PASSWORD=wpdbuserpass
+      - MYSQL_DATABASE=wpdb
+    volumes:
+      - type: bind
+        source: /srv/docker/wordpress_db
+        target: /var/lib/mysql
+    networks:
+      - backend
+  redis:
+    image: 'redis:6'
+    #user: "1000:999"
+    networks:
+      - backend
+  wordpress:
+    image: 'frankta/docktest1:latest'
+    #image: 'docktest1:beta'
+    environment:
+      - MYSQL_USER=wpdbuser
+      - MYSQL_PASSWORD=wpdbuserpass
+      - MYSQL_HOST=mysql
+      - MYSQL_DATABASE=wpdb
+      - WORDPRESS_HOST=blog.172.16.21.4.nip.io
+      - REDIS_HOST=redis
+      - HTTP_PROTO=https
+    #ports:
+    # - '8090:80'
+    depends_on:
+      - mysql
+      - redis
+    deploy:
+      replicas: 5
+      labels:
+        traefik.port: 80
+        traefik.frontend.rule: "Host:blog.172.16.21.4.nip.io"
+        traefik.docker.network: "proxy"
+        #traefik.frontend.redirect.entryPoint: "https"
+        traefik.frontend.headers.SSLRedirect: "true"
+    networks:
+      - backend
+      - proxy
+networks:
+  backend:
+    name: wordpress-backend
+  proxy:
+    external: true
